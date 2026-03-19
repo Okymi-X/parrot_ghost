@@ -30,3 +30,6 @@
 
 # 8. BloodHound CE (Docker - last because it takes time)
 - include_tasks: bloodhound.yml
+
+# 9. Fix permissions for /opt tools
+- include_tasks: fix-permissions.yml

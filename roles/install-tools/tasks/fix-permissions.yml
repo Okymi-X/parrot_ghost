@@ -1,0 +1,55 @@
+---
+# ===========================
+# Fix Permissions
+# ===========================
+- name: "Set ownership to default user for tools in /opt"
+  file:
+    path: "{{ item }}"
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+    recurse: yes
+  loop:
+    - /opt/ADCSKiller
+    - /opt/CORScanner
+    - /opt/GitTools
+    - /opt/Inveigh
+    - /opt/JSParser
+    - /opt/LinEnum
+    - /opt/PKINITtools
+    - /opt/PayloadsAllTheThings
+    - /opt/PetitPotam
+    - /opt/Powermad
+    - /opt/PrivescCheck
+    - /opt/Responder
+    - /opt/SecLists
+    - /opt/SharpCollection
+    - /opt/bloodhound
+    - /opt/chisel
+    - /opt/enum4linux-ng
+    - /opt/httpx
+    - /opt/jwt_tool
+    - /opt/katana
+    - /opt/krbrelayx
+    - /opt/les-mzet
+    - /opt/ligolo
+    - /opt/linux-exploit-suggester
+    - /opt/linux-smart-enumeration
+    - /opt/linuxprivchecker
+    - /opt/msfpc
+    - /opt/noPac
+    - /opt/nuclei
+    - /opt/p0wny-shell
+    - /opt/peas
+    - /opt/penelope
+    - /opt/plink
+    - /opt/pspy
+    - /opt/sliver
+    - /opt/static-binaries
+    - /opt/subfinder
+    - /opt/targetedKerberoast
+    - /opt/unix-privesc-check
+    - /opt/wordlists
+    - /opt/wwwolf-php-webshell
+  become: true
+  become_method: sudo
+  ignore_errors: true
