@@ -13,7 +13,7 @@ A comprehensive Ansible playbook to transform **Parrot HTB Edition** into a full
 python3 -m pip install ansible
 
 # 2. Clone and enter the repo
-git clone <repo-url> && cd parrot_ghost
+git clone https://github.com/Okymi-X/parrot_ghost.git && cd parrot_ghost
 
 # 3. Install galaxy requirements
 ansible-galaxy install -r requirements.yml
