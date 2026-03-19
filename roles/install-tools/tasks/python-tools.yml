@@ -1,0 +1,38 @@
+---
+# ===========================
+# Python/Pipx Core Tools
+# ===========================
+- name: "Ensure pipx path is set"
+  shell: pipx ensurepath
+  ignore_errors: true
+
+- name: "Install core pipx tools (AD/Impacket)"
+  community.general.pipx:
+    name: "{{ item.name }}"
+    source: "{{ item.url }}"
+    state: latest
+  loop:
+    - { name: 'impacket', url: 'git+https://github.com/fortra/impacket.git' }
+    - { name: 'netexec', url: 'git+https://github.com/Pennyw0rth/NetExec.git' }
+    - { name: 'certipy-ad', url: 'git+https://github.com/ly4k/Certipy.git' }
+    - { name: 'coercer', url: 'git+https://github.com/p0dalirius/Coercer.git' }
+  ignore_errors: true
+
+- name: "Install BloodHound CE Python ingestor"
+  community.general.pipx:
+    name: 'bloodhound-ce'
+    source: 'git+https://github.com/dirkjanm/BloodHound.py.git@bloodhound-ce'
+    state: latest
+  ignore_errors: true
+
+- name: "Install utility pipx tools"
+  community.general.pipx:
+    name: "{{ item.name }}"
+    source: "{{ item.url }}"
+    state: latest
+  loop:
+    - { name: 'updog', url: 'git+https://github.com/sc0tfree/updog.git' }
+    - { name: 'pwncat-cs', url: 'git+https://github.com/calebstewart/pwncat.git' }
+  ignore_errors: true
+
+

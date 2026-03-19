@@ -1,0 +1,41 @@
+---
+# ===========================
+# Ruby Gem Dependencies for evil-winrm
+# ===========================
+- name: "Installing Ruby gem dependencies"
+  gem:
+    name: "{{ item }}"
+    state: latest
+  loop:
+    - logger
+    - stringio
+    - winrm
+    - builder
+    - erubi
+    - gssapi
+    - gyoku
+    - httpclient
+    - logging
+    - little-plugger
+    - nori
+    - rubyntlm
+    - winrm-fs
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+- name: "Installing evil-winrm"
+  gem:
+    name: evil-winrm
+    state: latest
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+- name: "Installing wpscan gem (backup if apt fails)"
+  gem:
+    name: wpscan
+    state: latest
+  become: true
+  become_method: sudo
+  ignore_errors: true

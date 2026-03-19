@@ -1,0 +1,90 @@
+---
+# ===========================
+# Network & Pivoting Tools
+# ===========================
+
+# Note: socat, proxychains4, sshuttle, openvpn are installed via apt-stuff.yml
+
+- name: "Creating network tools directories"
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /opt/sliver
+    - /opt/plink
+    - /opt/static-binaries
+  become: true
+  become_method: sudo
+
+# ===========================
+# Sliver C2 Framework
+# ===========================
+- name: "Download Sliver C2 Server"
+  get_url:
+    url: "https://github.com/BishopFox/sliver/releases/latest/download/sliver-server_linux-amd64"
+    dest: "/opt/sliver/sliver-server"
+    mode: '0755'
+    timeout: 300
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+- name: "Download Sliver C2 Client"
+  get_url:
+    url: "https://github.com/BishopFox/sliver/releases/latest/download/sliver-client_linux-amd64"
+    dest: "/opt/sliver/sliver-client"
+    mode: '0755'
+    timeout: 300
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+# ===========================
+# Plink (PuTTY Link) for Windows pivoting
+# ===========================
+- name: "Download plink.exe"
+  get_url:
+    url: "https://the.earth.li/~sgtatham/putty/latest/w64/plink.exe"
+    dest: "/opt/plink/plink.exe"
+    mode: '0755'
+    timeout: 60
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+# ===========================
+# Static binaries (netcat, socat, nmap, etc.)
+# ===========================
+- name: "Clone static binaries repo"
+  git:
+    repo: "https://github.com/andrew-d/static-binaries"
+    dest: "/opt/static-binaries"
+    force: true
+    depth: 1
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+# ===========================
+# Symlink Sliver to /usr/local/bin
+# ===========================
+- name: "Symlink Sliver server"
+  file:
+    src: "/opt/sliver/sliver-server"
+    dest: "/usr/local/bin/sliver-server"
+    state: link
+    force: true
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+- name: "Symlink Sliver client"
+  file:
+    src: "/opt/sliver/sliver-client"
+    dest: "/usr/local/bin/sliver-client"
+    state: link
+    force: true
+  become: true
+  become_method: sudo
+  ignore_errors: true

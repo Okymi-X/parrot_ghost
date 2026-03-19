@@ -1,0 +1,32 @@
+---
+# ===========================
+# Install-Tools Role - Main Orchestrator
+# ===========================
+# Order matters: apt first, then language-specific, then repos/releases
+
+# 1. System packages (apt)
+- include_tasks: apt-stuff.yml
+
+# 2. Go-based tools (needs Go from system)
+- include_tasks: go-tools.yml
+
+# 3. Python/pipx tools
+- include_tasks: python-tools.yml
+
+# 4. Ruby gem tools
+- include_tasks: gem-tools.yml
+
+# 5. GitHub repos & binary releases
+- include_tasks: github-repos.yml
+
+# 6. Category-specific tools
+- include_tasks: web-tools.yml
+- include_tasks: ad-tools.yml
+- include_tasks: linux-tools.yml
+- include_tasks: network-tools.yml
+
+# 7. Wordlists setup
+- include_tasks: wordlists.yml
+
+# 8. BloodHound CE (Docker - last because it takes time)
+- include_tasks: bloodhound.yml

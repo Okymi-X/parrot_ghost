@@ -1,0 +1,114 @@
+---
+# ===========================
+# GitHub Repos - Git Clone
+# ===========================
+- name: "Installing useful github repos"
+  git:
+    repo: "{{ item.repo }}"
+    dest: "{{ item.location }}"
+    force: true
+    depth: 1
+  loop:
+    # Wordlists & Payloads
+    - { repo: "https://github.com/danielmiessler/SecLists", location: "/opt/SecLists" }
+    - { repo: "https://github.com/swisskyrepo/PayloadsAllTheThings", location: "/opt/PayloadsAllTheThings" }
+    # Windows Tools & Sharp Collection
+    - { repo: "https://github.com/Flangvik/SharpCollection", location: "/opt/SharpCollection" }
+    - { repo: "https://github.com/itm4n/PrivescCheck", location: "/opt/PrivescCheck" }
+    # Reverse Shell / Utility
+    - { repo: "https://github.com/brightio/penelope", location: "/opt/penelope" }
+    # Web Shells
+    - { repo: "https://github.com/flozz/p0wny-shell", location: "/opt/p0wny-shell" }
+    - { repo: "https://github.com/WhiteWinterWolf/wwwolf-php-webshell", location: "/opt/wwwolf-php-webshell" }
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+# ===========================
+# GitHub Releases - Binary Downloads
+# ===========================
+- name: "Create temporary build directory"
+  ansible.builtin.tempfile:
+    state: directory
+  register: build_dir
+
+- name: "Copying python script to download github releases"
+  copy:
+    src: "files/githubdownload.py"
+    dest: "{{ build_dir.path }}/githubdownload.py"
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  become_method: sudo
+
+- name: "Fix line endings on githubdownload.py (CRLF to LF)"
+  shell: "sed -i 's/\\r$//' {{ build_dir.path }}/githubdownload.py"
+  become: true
+  become_method: sudo
+
+- name: "Creating release download directories"
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /opt/chisel
+    - /opt/ligolo
+    - /opt/peas
+  become: true
+  become_method: sudo
+
+- name: "Downloading Chisel releases"
+  shell: "{{ build_dir.path }}/githubdownload.py {{ item.repo }} {{ item.regex }} {{ item.location }}"
+  loop:
+    - { repo: "jpillora/chisel", regex: "_linux_amd64.gz", location: "/opt/chisel" }
+    - { repo: "jpillora/chisel", regex: "_windows_amd64.zip", location: "/opt/chisel" }
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+- name: "Downloading Ligolo-ng releases"
+  shell: "{{ build_dir.path }}/githubdownload.py {{ item.repo }} {{ item.regex }} {{ item.location }}"
+  loop:
+    - { repo: "nicocha30/ligolo-ng", regex: "proxy_.*_linux_amd64.tar.gz", location: "/opt/ligolo" }
+    - { repo: "nicocha30/ligolo-ng", regex: "agent_.*_linux_amd64.tar.gz", location: "/opt/ligolo" }
+    - { repo: "nicocha30/ligolo-ng", regex: "agent_.*_windows_amd64.zip", location: "/opt/ligolo" }
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+- name: "Downloading PEASS-ng releases"
+  shell: "{{ build_dir.path }}/githubdownload.py {{ item.repo }} {{ item.regex }} {{ item.location }}"
+  loop:
+    - { repo: "carlospolop/PEASS-ng", regex: "linpeas.sh", location: "/opt/peas" }
+    - { repo: "carlospolop/PEASS-ng", regex: "winPEASx64.exe", location: "/opt/peas" }
+    - { repo: "carlospolop/PEASS-ng", regex: "winPEASx86.exe", location: "/opt/peas" }
+    - { repo: "carlospolop/PEASS-ng", regex: "winPEAS.bat", location: "/opt/peas" }
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+- name: "Downloading Chainsaw"
+  shell: "{{ build_dir.path }}/githubdownload.py WithSecureLabs/chainsaw chainsaw_all_ /opt/"
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+- name: "Downloading BloodHound GUI"
+  shell: "{{ build_dir.path }}/githubdownload.py BloodHoundAD/BloodHound BloodHound-linux-x64.zip /opt/"
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+- name: "Make linpeas executable"
+  shell: chmod +x /opt/peas/linpeas.sh
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+- name: "Remove temporary build directory"
+  ansible.builtin.file:
+    path: "{{ build_dir.path }}"
+    state: absent
+  when: build_dir.path is defined

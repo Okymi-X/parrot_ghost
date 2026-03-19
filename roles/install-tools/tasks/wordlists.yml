@@ -1,0 +1,60 @@
+---
+# ===========================
+# Wordlists Setup
+# ===========================
+
+- name: "Creating wordlist directories"
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /opt/wordlists
+    - /opt/wordlists/custom
+  become: true
+  become_method: sudo
+
+# ===========================
+# Extract rockyou.txt (if compressed)
+# ===========================
+- name: "Check if rockyou.txt.gz exists"
+  stat:
+    path: /usr/share/wordlists/rockyou.txt.gz
+  register: rockyou_gz
+
+- name: "Check if rockyou.txt already extracted"
+  stat:
+    path: /usr/share/wordlists/rockyou.txt
+  register: rockyou_txt
+
+- name: "Extract rockyou.txt"
+  shell: gunzip -kf /usr/share/wordlists/rockyou.txt.gz
+  when: rockyou_gz.stat.exists and not rockyou_txt.stat.exists
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+# ===========================
+# SecLists is cloned in github-repos.yml already
+# Create symlinks for easy access
+# ===========================
+- name: "Symlink SecLists to /usr/share/wordlists/"
+  file:
+    src: "/opt/SecLists"
+    dest: "/usr/share/wordlists/SecLists"
+    state: link
+    force: true
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+# ===========================
+# Symlink wordlists folder
+# ===========================
+- name: "Symlink /opt/wordlists to home"
+  file:
+    src: "/opt/wordlists"
+    dest: "{{ ansible_env.HOME }}/wordlists"
+    state: link
+    force: true
+  ignore_errors: true

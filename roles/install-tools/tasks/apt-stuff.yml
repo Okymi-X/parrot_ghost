@@ -1,0 +1,268 @@
+---
+- name: "Updating apt repo/cache"
+  apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
+  become: true
+  become_method: sudo
+
+- name: "Upgrade all packages"
+  apt: upgrade=yes force_apt_get=yes
+  become: true
+  become_method: sudo
+
+- name: "Remove unofficial docker images"
+  package:
+    name:
+      - docker.io
+      - docker-compose
+      - docker-doc
+      - podman-docker
+    state: absent
+  register: docker_remove
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+- name: "Remove NetExec - We want to use pipx for this"
+  package:
+    name:
+      - netexec
+    state: absent
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+- name: "Remove Containerd/Runc"
+  package:
+    name:
+      - containerd
+      - runc
+    state: absent
+  when: docker_remove.changed
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+# ===========================
+# Core Utilities
+# ===========================
+- name: "Installing Core Utilities"
+  package:
+    name:
+      - jq
+      - pipx
+      - ntpdate
+      - flameshot
+      - rsyslog
+      - ca-certificates
+      - curl
+      - wget
+      - gh
+      - bat
+      - lz4
+      - tree
+      - xclip
+      - xsltproc
+      - shellcheck
+      - p7zip-full
+      - unzip
+      - rlwrap
+      - tmux
+      - git
+      - vim
+      - python3-pip
+      - python3-venv
+      - python3-full
+      - python3-requests
+      - build-essential
+      - golang
+      - dos2unix
+      - libkrb5-dev
+      - libssl-dev
+      - libffi-dev
+    state: latest
+  become: true
+  become_method: sudo
+
+# ===========================
+# Scanning & Enumeration
+# ===========================
+- name: "Installing Scanning & Enumeration Tools"
+  package:
+    name:
+      - nmap
+      - masscan
+      - nikto
+      - whatweb
+      - dirb
+      - gobuster
+      - wfuzz
+      - enum4linux
+      - nbtscan
+      - dnsrecon
+      - dnsenum
+      - whois
+      - snmp
+      - snmp-mibs-downloader
+      - onesixtyone
+      - libimage-exiftool-perl
+    state: latest
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+# ===========================
+# Exploitation & Password Cracking
+# ===========================
+- name: "Installing Exploitation & Password Cracking Tools"
+  package:
+    name:
+      - sqlmap
+      - hydra
+      - medusa
+      - hashcat
+      - john
+      - cewl
+      - crunch
+      - mingw-w64
+    state: latest
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+# ===========================
+# Network & Pivoting
+# ===========================
+- name: "Installing Network & Pivoting Tools"
+  package:
+    name:
+      - socat
+      - proxychains4
+      - netcat-openbsd
+      - tcpdump
+      - wireshark
+      - tshark
+      - sshuttle
+      - ftp
+      - lftp
+      - rpcbind
+      - nfs-common
+      - cifs-utils
+      - openvpn
+    state: latest
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+# ===========================
+# SMB / LDAP / Database Clients
+# ===========================
+- name: "Installing SMB/LDAP/Database Client Tools"
+  package:
+    name:
+      - smbclient
+      - smbmap
+      - redis-tools
+      - default-mysql-client
+      - postgresql-client
+      - ldap-utils
+    state: latest
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+# ===========================
+# Reverse Engineering & Forensics
+# ===========================
+- name: "Installing RE & Forensics Tools"
+  package:
+    name:
+      - gdb
+      - radare2
+      - binwalk
+      - foremost
+      - steghide
+      - ltrace
+      - strace
+    state: latest
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+# ===========================
+# .NET / Cross-Compilation
+# ===========================
+- name: "Installing Cross-Compilation Tools"
+  package:
+    name:
+      - mono-devel
+    state: latest
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+# ===========================
+# Parrot-specific tools (may already be installed)
+# ===========================
+- name: "Installing Parrot-specific tools"
+  package:
+    name:
+      - fierce
+      - ffuf
+    state: latest
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+# ===========================
+# Docker Installation
+# ===========================
+- name: Create directory for keyrings
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  become: true
+  become_method: sudo
+
+- name: "Add Docker keyring to apt"
+  get_url:
+    url: "https://download.docker.com/linux/debian/gpg"
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+    force: true
+  become: true
+  become_method: sudo
+
+- name: "Install Docker Repository"
+  apt_repository:
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian {{ distribution }} stable"
+    state: present
+    update_cache: yes
+  become: true
+  become_method: sudo
+
+- name: "Upgrade all packages after Docker repo"
+  apt: upgrade=yes force_apt_get=yes
+  become: true
+  become_method: sudo
+
+- name: "Install Docker"
+  package:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: latest
+  become: true
+  become_method: sudo
+
+- name: "Add current user to docker group"
+  user:
+    name: "{{ ansible_user_id }}"
+    groups: docker
+    append: yes
+  become: true
+  become_method: sudo
+  ignore_errors: true

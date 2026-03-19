@@ -1,0 +1,98 @@
+---
+# ===========================
+# Linux Enumeration & Privilege Escalation - GitHub Repos
+# ===========================
+- name: "Cloning Linux Privesc & Enumeration Repos"
+  git:
+    repo: "{{ item.repo }}"
+    dest: "{{ item.location }}"
+    force: true
+  loop:
+    - { repo: "https://github.com/rebootuser/LinEnum", location: "/opt/LinEnum" }
+    - { repo: "https://github.com/diego-treitos/linux-smart-enumeration", location: "/opt/linux-smart-enumeration" }
+    - { repo: "https://github.com/The-Z-Labs/linux-exploit-suggester", location: "/opt/linux-exploit-suggester" }
+    - { repo: "https://github.com/pentestmonkey/unix-privesc-check", location: "/opt/unix-privesc-check" }
+    - { repo: "https://github.com/mzet-/linux-exploit-suggester", location: "/opt/les-mzet" }
+    - { repo: "https://github.com/sleventyeleven/linuxprivchecker", location: "/opt/linuxprivchecker" }
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+# ===========================
+# pspy - Process Spy (Release Download)
+# ===========================
+- name: "Creating pspy directory"
+  file:
+    path: "/opt/pspy"
+    state: directory
+    mode: '0755'
+  become: true
+  become_method: sudo
+
+- name: "Copying python script to download pspy releases"
+  copy:
+    src: "files/githubdownload.py"
+    dest: "/tmp/githubdownload_linux.py"
+    mode: '0755'
+  become: true
+  become_method: sudo
+
+- name: "Fix line endings on linux download script"
+  shell: "sed -i 's/\\r$//' /tmp/githubdownload_linux.py"
+  become: true
+  become_method: sudo
+
+- name: "Downloading pspy64"
+  shell: "/tmp/githubdownload_linux.py DominicBreuker/pspy pspy64 /opt/pspy"
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+- name: "Downloading pspy32"
+  shell: "/tmp/githubdownload_linux.py DominicBreuker/pspy pspy32 /opt/pspy"
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+- name: "Cleanup linux download script"
+  file:
+    path: "/tmp/githubdownload_linux.py"
+    state: absent
+  become: true
+  become_method: sudo
+
+# ===========================
+# Make pspy binaries executable
+# ===========================
+- name: "Make pspy binaries executable"
+  shell: "chmod +x /opt/pspy/pspy* || true"
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+# ===========================
+# Make enumeration scripts executable
+# ===========================
+- name: "Make linux-smart-enumeration executable"
+  file:
+    path: "/opt/linux-smart-enumeration/lse.sh"
+    mode: '0755'
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+- name: "Make LinEnum executable"
+  file:
+    path: "/opt/LinEnum/LinEnum.sh"
+    mode: '0755'
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+- name: "Make linux-exploit-suggester executable"
+  file:
+    path: "/opt/linux-exploit-suggester/linux-exploit-suggester.sh"
+    mode: '0755'
+  become: true
+  become_method: sudo
+  ignore_errors: true

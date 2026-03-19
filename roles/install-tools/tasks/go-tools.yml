@@ -1,0 +1,47 @@
+---
+# ===========================
+# Go-based Pentesting Tools
+# ===========================
+# Note: golang must be installed via apt-stuff.yml first
+
+- name: "Ensure Go directories exist"
+  file:
+    path: "{{ ansible_env.HOME }}/go/bin"
+    state: directory
+    mode: '0755'
+
+- name: "Install Go-based tools"
+  shell: "go install {{ item }}@latest"
+  loop:
+    - github.com/ropnop/kerbrute
+    - github.com/hakluke/hakrawler
+    - github.com/jaeles-project/gospider
+    - github.com/tomnomnom/assetfinder
+    - github.com/tomnomnom/waybackurls
+    - github.com/lc/gau/v2/cmd/gau
+    - github.com/tomnomnom/anew
+    - github.com/tomnomnom/qsreplace
+    - github.com/tomnomnom/httprobe
+    - github.com/tomnomnom/unfurl
+    - github.com/sensepost/gowitness
+    - github.com/hahwul/dalfox/v2
+  environment:
+    GOPATH: "{{ ansible_env.HOME }}/go"
+    PATH: "{{ ansible_env.PATH }}:{{ ansible_env.HOME }}/go/bin:/usr/local/go/bin"
+  ignore_errors: true
+
+# ===========================
+# Symlink Go binaries to /usr/local/bin
+# ===========================
+- name: "Symlink go tools to /usr/local/bin"
+  shell: |
+    if [ -d "{{ ansible_env.HOME }}/go/bin" ]; then
+      for f in {{ ansible_env.HOME }}/go/bin/*; do
+        if [ -f "$f" ]; then
+          ln -sf "$f" /usr/local/bin/$(basename "$f")
+        fi
+      done
+    fi
+  become: true
+  become_method: sudo
+  ignore_errors: true

@@ -1,0 +1,124 @@
+---
+# ===========================
+# Active Directory - GitHub Repos
+# ===========================
+- name: "Cloning Active Directory Attack Repos"
+  git:
+    repo: "{{ item.repo }}"
+    dest: "{{ item.location }}"
+    force: true
+  loop:
+    - { repo: "https://github.com/lgandx/Responder", location: "/opt/Responder" }
+    - { repo: "https://github.com/dirkjanm/krbrelayx", location: "/opt/krbrelayx" }
+    - { repo: "https://github.com/dirkjanm/PKINITtools", location: "/opt/PKINITtools" }
+    - { repo: "https://github.com/topotam/PetitPotam", location: "/opt/PetitPotam" }
+    - { repo: "https://github.com/Ridter/noPac", location: "/opt/noPac" }
+    - { repo: "https://github.com/cddmp/enum4linux-ng", location: "/opt/enum4linux-ng" }
+    - { repo: "https://github.com/grimlockx/ADCSKiller", location: "/opt/ADCSKiller" }
+    - { repo: "https://github.com/Kevin-Robertson/Powermad", location: "/opt/Powermad" }
+    - { repo: "https://github.com/Kevin-Robertson/Inveigh", location: "/opt/Inveigh" }
+    - { repo: "https://github.com/ShutdownRepo/targetedKerberoast", location: "/opt/targetedKerberoast" }
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+# ===========================
+# Active Directory - Pipx Tools
+# ===========================
+- name: "Install AD pipx tools (batch 1 - dirkjanm tools)"
+  community.general.pipx:
+    name: "{{ item.name }}"
+    source: "{{ item.url }}"
+    state: latest
+  loop:
+    - { name: 'mitm6', url: 'git+https://github.com/dirkjanm/mitm6.git' }
+    - { name: 'adidnsdump', url: 'git+https://github.com/dirkjanm/adidnsdump.git' }
+  ignore_errors: true
+
+- name: "Install ldapdomaindump from PyPI"
+  community.general.pipx:
+    name: ldapdomaindump
+    state: latest
+  ignore_errors: true
+
+- name: "Install AD pipx tools (batch 2 - exploitation)"
+  community.general.pipx:
+    name: "{{ item.name }}"
+    source: "{{ item.url }}"
+    state: latest
+  loop:
+    - { name: 'donpapi', url: 'git+https://github.com/login-securite/DonPAPI.git' }
+    - { name: 'pre2k', url: 'git+https://github.com/garrettfoster13/pre2k.git' }
+  ignore_errors: true
+
+- name: "Install bloodyAD from PyPI"
+  community.general.pipx:
+    name: bloodyAD
+    state: latest
+  ignore_errors: true
+
+- name: "Install AD pipx tools (batch 3 - enumeration)"
+  community.general.pipx:
+    name: "{{ item }}"
+    state: latest
+  loop:
+    - ldeep
+    - name-that-hash
+    - search-that-hash
+  ignore_errors: true
+
+# ===========================
+# Install enum4linux-ng dependencies
+# Uses --ignore-installed to skip conflicts with Debian-managed packages
+# ===========================
+- name: "Install enum4linux-ng requirements"
+  shell: pip3 install --break-system-packages --ignore-installed -r /opt/enum4linux-ng/requirements.txt
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+- name: "Make enum4linux-ng executable"
+  file:
+    path: "/opt/enum4linux-ng/enum4linux-ng.py"
+    mode: '0755'
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+- name: "Symlink enum4linux-ng"
+  file:
+    src: "/opt/enum4linux-ng/enum4linux-ng.py"
+    dest: "/usr/local/bin/enum4linux-ng"
+    state: link
+    force: true
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+# ===========================
+# Install targetedKerberoast dependencies
+# Uses --ignore-installed to skip conflicts with Debian-managed packages
+# ===========================
+- name: "Install targetedKerberoast requirements"
+  shell: pip3 install --break-system-packages --ignore-installed -r /opt/targetedKerberoast/requirements.txt
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+- name: "Make targetedKerberoast executable"
+  file:
+    path: "/opt/targetedKerberoast/targetedKerberoast.py"
+    mode: '0755'
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+- name: "Symlink targetedKerberoast"
+  file:
+    src: "/opt/targetedKerberoast/targetedKerberoast.py"
+    dest: "/usr/local/bin/targetedKerberoast"
+    state: link
+    force: true
+  become: true
+  become_method: sudo
+  ignore_errors: true

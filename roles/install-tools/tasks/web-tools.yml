@@ -1,0 +1,118 @@
+---
+# ===========================
+# Web Pentesting - GitHub Repos
+# ===========================
+- name: "Cloning Web Pentesting Repos"
+  git:
+    repo: "{{ item.repo }}"
+    dest: "{{ item.location }}"
+    force: true
+  loop:
+    - { repo: "https://github.com/ticarpi/jwt_tool", location: "/opt/jwt_tool" }
+    - { repo: "https://github.com/internetwache/GitTools", location: "/opt/GitTools" }
+    - { repo: "https://github.com/chenjj/CORScanner", location: "/opt/CORScanner" }
+    - { repo: "https://github.com/nahamsec/JSParser", location: "/opt/JSParser" }
+    - { repo: "https://github.com/g0tmi1k/msfpc", location: "/opt/msfpc" }
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+# ===========================
+# Web Pentesting - Pipx Tools
+# ===========================
+- name: "Install Web Pentesting pipx tools"
+  community.general.pipx:
+    name: "{{ item.name }}"
+    source: "{{ item.url }}"
+    state: latest
+  loop:
+    - { name: 'arjun', url: 'git+https://github.com/s0md3v/Arjun.git' }
+    - { name: 'wafw00f', url: 'git+https://github.com/EnableSecurity/wafw00f.git' }
+    - { name: 'droopescan', url: 'git+https://github.com/SamJoan/droopescan.git' }
+  ignore_errors: true
+
+# ===========================
+# Web Pentesting - Binary Releases (ProjectDiscovery)
+# ===========================
+- name: "Creating web tools directories"
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /opt/nuclei
+    - /opt/subfinder
+    - /opt/httpx
+    - /opt/katana
+  become: true
+  become_method: sudo
+
+- name: "Copying python script to download web tool releases"
+  copy:
+    src: "files/githubdownload.py"
+    dest: "/tmp/githubdownload_web.py"
+    mode: '0755'
+  become: true
+  become_method: sudo
+
+- name: "Fix line endings on web download script"
+  shell: "sed -i 's/\\r$//' /tmp/githubdownload_web.py"
+  become: true
+  become_method: sudo
+
+- name: "Downloading Web Tool Releases"
+  shell: "/tmp/githubdownload_web.py {{ item.repo }} {{ item.regex }} {{ item.location }}"
+  loop:
+    - { repo: "projectdiscovery/nuclei", regex: "nuclei_.*_linux_amd64.zip", location: "/opt/nuclei" }
+    - { repo: "projectdiscovery/subfinder", regex: "subfinder_.*_linux_amd64.zip", location: "/opt/subfinder" }
+    - { repo: "projectdiscovery/httpx", regex: "httpx_.*_linux_amd64.zip", location: "/opt/httpx" }
+    - { repo: "projectdiscovery/katana", regex: "katana_.*_linux_amd64.zip", location: "/opt/katana" }
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+- name: "Cleanup web download script"
+  file:
+    path: "/tmp/githubdownload_web.py"
+    state: absent
+  become: true
+  become_method: sudo
+
+# ===========================
+# Symlink web tools to /usr/local/bin
+# ===========================
+- name: "Symlink web binary tools"
+  file:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    state: link
+    force: true
+  loop:
+    - { src: "/opt/nuclei/nuclei", dest: "/usr/local/bin/nuclei" }
+    - { src: "/opt/subfinder/subfinder", dest: "/usr/local/bin/subfinder" }
+    - { src: "/opt/httpx/httpx", dest: "/usr/local/bin/httpx" }
+    - { src: "/opt/katana/katana", dest: "/usr/local/bin/katana" }
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+# ===========================
+# Make msfpc executable
+# ===========================
+- name: "Make msfpc executable"
+  file:
+    path: "/opt/msfpc/msfpc.sh"
+    mode: '0755'
+  become: true
+  become_method: sudo
+  ignore_errors: true
+
+- name: "Symlink msfpc"
+  file:
+    src: "/opt/msfpc/msfpc.sh"
+    dest: "/usr/local/bin/msfpc"
+    state: link
+    force: true
+  become: true
+  become_method: sudo
+  ignore_errors: true
